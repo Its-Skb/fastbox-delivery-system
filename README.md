@@ -56,3 +56,68 @@ Example run against one supplied test file:
 ```powershell
 python delivery_system.py "test_case_1.json" --output report.json
 ```
+
+## Bonus features
+
+All four optional tasks are implemented. The required default workflow remains
+unchanged; bonus artifacts can be generated with:
+
+```powershell
+python delivery_system.py bonus_demo.json --output bonus_report.json `
+  --random-delays --seed 42 --ascii-routes routes.txt `
+  --top-performer-csv top_performer.csv
+```
+
+The repository includes the resulting `bonus_report.json`, `routes.txt`, and
+`top_performer.csv` files so each optional feature can be reviewed immediately.
+
+### Random delivery delays
+
+`--random-delays` adds a simulated integer delay of 0 to 30 minutes for each
+delivery and includes `total_delay_minutes` for each agent in the JSON report.
+Use `--seed` for reproducible output, and optionally use
+`--max-delay-minutes` to configure the maximum delay. Delays are tracked as
+operational context and do not alter the distance-based efficiency requested
+in the main assignment.
+
+### ASCII route visualization
+
+`--ascii-routes routes.txt` generates a readable text file showing each
+package's path:
+
+```text
+[P1] A1 (5, 5) --pick up--> W1 (0, 0) --deliver--> (30, 40)
+```
+
+It also records when any scheduled new agent becomes available.
+
+### Dynamic agent joining
+
+An input file can include agents that become available during the simulated
+day. Packages are processed in their listed order; an agent joining after
+`N` completed deliveries is eligible beginning with package `N + 1`.
+
+```json
+{
+    "new_agents": [
+        {"id": "A4", "location": [48, 75], "joins_after_deliveries": 2}
+    ]
+}
+```
+
+Existing assignments are not revisited when an agent joins.
+
+### Export top performer to CSV
+
+`--top-performer-csv top_performer.csv` writes the most efficient agent and
+their final metrics to a CSV file suitable for sharing or spreadsheet review.
+
+## Additional bonus assumptions
+
+1. Random delays are modeled in minutes and do not change route distance.
+2. Packages are processed in JSON list order for the purpose of mid-day agent
+   availability.
+3. A joining agent becomes eligible only for undelivered packages after its
+   scheduled join point; packages already delivered are never reassigned.
+4. New agents with no assigned packages still appear in the final report with
+   zero deliveries, consistent with initially available idle agents.

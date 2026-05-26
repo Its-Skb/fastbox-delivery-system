@@ -8,6 +8,7 @@ from delivery_system import (
     create_report,
     distance,
     load_data,
+    load_new_agents,
     simulate_delivery,
 )
 
@@ -83,6 +84,65 @@ class DeliverySystemTests(unittest.TestCase):
             input_path.write_text(json.dumps(data), encoding="utf-8")
             with self.assertRaises(DataValidationError):
                 load_data(input_path)
+
+    def test_agent_joining_mid_day_applies_only_to_future_packages(self) -> None:
+        report = simulate_delivery(
+            {"W1": (10.0, 0.0)},
+            {"A1": (0.0, 0.0)},
+            [
+                {"id": "P1", "warehouse": "W1", "destination": (10.0, 1.0)},
+                {"id": "P2", "warehouse": "W1", "destination": (10.0, 1.0)},
+            ],
+            new_agents=[
+                {"id": "A2", "location": (10.0, 0.0), "joins_after_deliveries": 1}
+            ],
+        )
+
+        self.assertEqual(report["A1"]["packages_delivered"], 1)
+        self.assertEqual(report["A2"]["packages_delivered"], 1)
+        self.assertEqual(report["A1"]["total_distance"], 11.0)
+        self.assertEqual(report["A2"]["total_distance"], 1.0)
+        self.assertEqual(report["best_agent"], "A2")
+
+    def test_bonus_artifacts_and_seeded_delays_are_generated(self) -> None:
+        data = {
+            "warehouses": {"W1": [0, 0]},
+            "agents": {"A1": [0, 0]},
+            "new_agents": [{"id": "A2", "location": [0, 0], "joins_after_deliveries": 1}],
+            "packages": [
+                {"id": "P1", "warehouse": "W1", "destination": [3, 4]},
+                {"id": "P2", "warehouse": "W1", "destination": [0, 2]},
+            ],
+        }
+        with tempfile.TemporaryDirectory() as folder:
+            input_path = Path(folder) / "input.json"
+            report_path = Path(folder) / "bonus_report.json"
+            routes_path = Path(folder) / "routes.txt"
+            csv_path = Path(folder) / "top_performer.csv"
+            input_path.write_text(json.dumps(data), encoding="utf-8")
+
+            initial_agents = load_data(input_path)[1]
+            self.assertEqual(load_new_agents(input_path, initial_agents)[0]["id"], "A2")
+            first = create_report(
+                input_path,
+                report_path,
+                random_delays=True,
+                delay_seed=7,
+                routes_output=routes_path,
+                csv_output=csv_path,
+            )
+            second = create_report(
+                input_path,
+                report_path,
+                random_delays=True,
+                delay_seed=7,
+            )
+
+            self.assertEqual(first, second)
+            self.assertIn("total_delay_minutes", first["A1"])
+            self.assertIn("[JOIN] A2", routes_path.read_text(encoding="utf-8"))
+            self.assertIn("--pick up-->", routes_path.read_text(encoding="utf-8"))
+            self.assertIn("agent_id,packages_delivered", csv_path.read_text(encoding="utf-8"))
 
 
 if __name__ == "__main__":

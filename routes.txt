@@ -1,0 +1,8 @@
+FASTBOX ASCII ROUTE VISUALIZATION
+=================================
+[P1] A1 (5, 5) --pick up--> W1 (0, 0) --deliver--> (30, 40) | distance: 57.07 | delay: 20 min
+[P2] A2 (60, 60) --pick up--> W2 (50, 75) --deliver--> (70, 90) | distance: 43.03 | delay: 3 min
+[JOIN] A4 becomes available at (48, 75) after 2 completed deliveries.
+[P3] A3 (95, 30) --pick up--> W3 (100, 25) --deliver--> (105, 20) | distance: 14.14 | delay: 0 min
+[P4] A1 (5, 5) --pick up--> W1 (0, 0) --deliver--> (10, 10) | distance: 21.21 | delay: 23 min
+[P5] A4 (48, 75) --pick up--> W2 (50, 75) --deliver--> (40, 80) | distance: 13.18 | delay: 8 min
